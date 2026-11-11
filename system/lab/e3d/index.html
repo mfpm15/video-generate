@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><title>e3d lab</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style></head><body>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { makePost } from '/core/three/post.js';
+const W = innerWidth, H = innerHeight, Q = new URLSearchParams(location.search), SS = +(Q.get('ss') || 1), POST = Q.get('post') !== '0';
+const r = new THREE.WebGLRenderer({ antialias: !POST, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07080d); scene.fog = new THREE.Fog(0x07080d, 8, 30);
+const cam = new THREE.PerspectiveCamera(40, W / H, .1, 100); cam.position.set(0, 0, 9);
+scene.add(new THREE.AmbientLight(0x8899ff, .6)); const dl = new THREE.DirectionalLight(0xffffff, 2.2); dl.position.set(3, 5, 6); scene.add(dl);
+const ms = []; const geo = [new THREE.IcosahedronGeometry(.4, 1), new THREE.TorusGeometry(.35, .12, 12, 24), new THREE.BoxGeometry(.6, .6, .6)];
+for (let i = 0; i < 120; i++) { const m = new THREE.Mesh(geo[i % 3], new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL((i * .13) % 1, .7, .5), emissive: new THREE.Color().setHSL((i * .13) % 1, .8, .25), roughness: .3, metalness: .4 })); m.userData.i = i; scene.add(m); ms.push(m); }
+const grid = new THREE.GridHelper(60, 60, 0x4466ff, 0x223366); grid.position.y = -3; scene.add(grid);
+const post = POST ? makePost(r, scene, cam, W, H, { ssaa: SS, ao: Q.get('ao') === '1' }) : null; if (post) { post.dof.maxCoc = Q.get('dof') === '1' ? 14 : 0; post.bloom.strength = .6; post.bloom.threshold = .2; }
+window.DUR = 6; window.render = t => { ms.forEach(m => { const i = m.userData.i, a = t * .5 + i * .4; m.position.set(Math.cos(a) * (1 + i * .03), Math.sin(a * 1.3 + i) * 3, Math.sin(a) * 2 - i * .05); m.rotation.set(a, a * .7, 0); }); cam.position.x = Math.sin(t * .4) * 1.5; cam.lookAt(0, 0, 0); post ? post.composer.render() : r.render(scene, cam); };
+window.TEXTS = () => []; window.READY = true;
+</script></body></html>

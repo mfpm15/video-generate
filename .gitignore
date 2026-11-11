@@ -1,0 +1,33 @@
+# Local Python environments and caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Installed JavaScript dependencies
+node_modules/
+
+# Local credentials and machine settings
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Setup logs and generated production files (keep film source files)
+/system/logs/
+/films/*/out/
+/films/*/voice/
+/films/*/_lib/
+/films/*/fonts/
+/films/*/final/
+/films/*/timeline.json
+/films/*/events.json
+
+# Generated caption lab assets
+/system/lab/captions/_lib/
+/system/lab/captions/fonts/
+/system/lab/captions/out/
+
+# OS metadata
+.DS_Store
+Thumbs.db

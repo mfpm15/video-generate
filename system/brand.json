@@ -1,0 +1,10 @@
+{
+ "enabled": true,
+ "name": "ngetehnology",
+ "parts": ["ngeteh", "nology"],
+ "x": 60,
+ "y": 160,
+ "fontPx": 40,
+ "opacity": 0.92,
+ "chipRight": 60
+}
