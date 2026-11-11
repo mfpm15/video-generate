@@ -61,3 +61,10 @@ Style looks in template mode: per-style accent colour + tinted background taken 
 
 ## 3D short-form engine (default since 2026-11-12)
 `new-film.sh` now defaults to **9:16 1080x1920 and engine 3d**. `lib/e3d.js` (+ worlds.js, type3d.js, props3d.js, kinds3d.js, captionsShort.js) renders a three.js scene per film: world neon | glass | clay | cosmos (from the style), 3D word-by-word type, 26 props, 13 illustration kinds, per-scene camera moves, chunked captions inside the Shorts/Reels/TikTok safe zone (left 60, right 150, bottom limit 75 % of the height), per-world sound palettes. Scenes are built lazily and disposed to keep GPU memory small. Tools: `tools/texts3d.mjs` (projected text boxes), `tools/stills3d.sh` (quick stills), `review.sh`, `thumb.sh` (3D thumbnails, 3 variants, 9:16 only), `selftest.py`. The older flat 2D engine (`lib/scenes.js`) remains for `--engine 2d`.
+
+
+## Skill anime dan pilihan style
+
+Claude Code sekarang juga memiliki `/buat-anime` dan skill `/make-an-anime`; lihat [panduan anime](../docs/ANIME.md). Lemo-Opuscar tetap dipakai oleh `/buat-video` dan `/buat-seri`.
+
+Sebelum produksi baca [kontrak template/style](STYLE-WORKFLOW.md). Renderer bersama 2D/3D di atas adalah template. Style resmi yang dipilih pengguna memerlukan implementasi custom berdasarkan STYLE.md dan review frame; nama style atau perubahan palet saja tidak membuktikan fidelity. Pilihan mode dan style dikunci untuk seluruh seri.

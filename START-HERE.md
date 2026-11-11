@@ -18,3 +18,16 @@ sh system/clean.sh <slug>                      # hemat disk setelah selesai
 
 ## Cek lingkungan (hanya membaca, tidak menginstal)
 `powershell -ExecutionPolicy Bypass -File .\system	oolsuditudit.ps1`
+
+
+## Tambahan: anime dan pemilihan style
+
+Di Claude Code dari root repo:
+
+```text
+/buat-anime Judul | cerita singkat | style pilihan
+```
+
+Skill langsung: `/make-an-anime`. Panduan dan prasyarat: `docs/ANIME.md`. Generasi anime memakai Fal berbayar dan menunggu persetujuan rencana/biaya; menginstal skill tidak menjalankan produksi.
+
+`/buat-video` dan `/buat-seri` tetap menggunakan Opuscar. Pilih template bersama atau style resmi/custom; lihat `system/STYLE-WORKFLOW.md`. Hasil harus dibandingkan dengan ciri style yang dipilih, bukan hanya diberi warna yang mirip.

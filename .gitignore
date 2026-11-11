@@ -31,3 +31,8 @@ node_modules/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Anime production projects may contain large renders and private reference media
+/anime/
+/.claude/skills/make-an-anime/scripts/vendor/
+/.claude/skills/make-an-anime/scripts/tools/p5/fonts/

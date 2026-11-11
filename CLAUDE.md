@@ -74,3 +74,19 @@ Repo shinyobjectz/raea: canary, Windows x86_64 "new and least tested", React/TSX
 - Mandatory final/ files: CAPTION.txt, HASHTAGS.txt, POST.md (+ mp4, thumbnail.jpg, QA-REPORT.md, CREDITS). `system/py/check_deliverables.py` runs at the end of build.sh. Instagram max 5 hashtags (reported 2026, verify), #ngetehnology added automatically.
 - Beats (`lines.json` "beats"), hook pre-roll, script lint (`system/py/lint_script.py`), Art Director (`system/py/art_director.py`: topic -> palette/motifs/world), RAM guard in build.sh, reading pad 1.0 s for 3D.
 - Known limits: AO/DOF (`?hq=1`) crash or fail on the Intel iGPU with several workers and add little; 3D quality gains must come from models/materials/HDRI (not done yet); research on retention is vendor-blog based (directional).
+
+
+## Integrasi skill anime dan fidelity style (keputusan pengguna terbaru)
+
+Bagian ini memperbarui default historis dokumen di atas dan MASTER-PROMPT.md sesuai permintaan pengguna untuk memilih template/style.
+
+- `/buat-video` dan `/buat-seri` tetap memakai Lemo-Opuscar. `/buat-anime` memakai skill lokal `.claude/skills/make-an-anime/SKILL.md`; `/make-an-anime` adalah pemanggilan langsung skill itu. Panduan ada di `docs/ANIME.md`.
+- Baca `system/STYLE-WORKFLOW.md` sebelum produksi. Pilihan template/style harus diwujudkan dalam renderer atau prompt dan diperiksa lewat frame, bukan sekadar metadata/palet. Template bersama Opuscar bukan implementasi setia semua 66 style. Style resmi yang dipilih memerlukan custom `main.js` berdasarkan STYLE.md, kecuali pengguna memilih mode template. Series mengunci mode dan style untuk seluruh bagian.
+- Library Opuscar yang belum tersedia memblokir validasi style aslinya. Jangan mengklaim sudah menghasilkan video sesuai style ketika hanya scaffold/template yang tersedia.
+- Skill anime adalah jalur tambahan berbasis Fal. Larangan paid API pada Opuscar tetap berlaku; anime berbayar hanya jika pengguna secara eksplisit mengizinkan rencana dan biaya. Memasang skill bukan izin produksi/upload. Key hanya dari environment/secret manager, tidak pernah di chat/repo.
+- Gunakan checkout aktual, bukan path Windows hard-coded. Proyek anime di `anime/<slug>/`; `films/` dan `series/` tetap format Opuscar. Native Windows anime belum diverifikasi, gunakan WSL; Swift VFX hanya macOS.
+- Jangan otomatis memposting video. Catat QA dengan jujur dan pertahankan brand/credits. Konfigurasi `film.json` tidak otomatis memanggil toolkit anime atau mengganti renderer template.
+
+- **Input style dinamis:** user memberi arahan visual/template/referensi dan revisi langsung di chat. Jangan meminta user mengedit STYLE.md/JSON atau memilih preset wajib. Claude membuat dan memperbarui artefak internal otomatis. Terima gaya bebas/campuran; baca STYLE.md upstream hanya untuk style resmi yang memang disebut user.
+
+- **Kualitas dan danger zone:** baca `system/QUALITY-GATES.md` untuk kedua engine. Pertahankan standar upstream; periksa UI/crop, bounding box teks/caption/brand/wajah saat bergerak, serta pitfalls style. Jangan menyebut hasil setara upstream/siap posting tanpa bukti frame, playback/audio dan QA aktual.
