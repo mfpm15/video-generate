@@ -54,3 +54,8 @@ Baca [quality gates bersama](../system/QUALITY-GATES.md). Style/prompt, review g
 Aturan bersama ada di [STYLE-WORKFLOW.md](../system/STYLE-WORKFLOW.md). Template Opuscar mempunyai renderer bersama; style resmi membutuhkan `main.js` custom berdasarkan `STYLE.md`, bukan perubahan palet saja. Anime menggunakan style bible, sheets dan prompt untuk menjaga look pilihan pengguna. Empat contoh anime adalah contoh workflow, bukan empat preset art style.
 
 Format timeline kedua engine berbeda. Anime dapat menjadi aset dalam film Opuscar custom, tetapi belum ada bridge otomatis. Simpan video bersih, final, kredensial aset/credits, style contract dan QA; jangan timpa sumber. Output produksi `anime/` diabaikan Git karena dapat memuat media besar dan foto referensi. Tambahkan hanya sumber produksi yang memang ingin dibagikan secara eksplisit.
+
+
+## Demo/edit lokal tanpa Fal
+
+Jika diminta pengguna, toolkit dapat merender artwork/footage yang tersedia dengan p5 dan FFmpeg tanpa key Fal (`system/doctor.py --engine anime-local`). Camera move, parallax, partikel, typography dan compositing adalah kemampuan lokal; ini bukan gerak tubuh/akting generatif H3. Ketersediaan tool gambar di chat cloud tidak membuktikan tool tersebut ada di Claude Code laptop. Untuk judul baru perlu aset yang disediakan atau model/tool gambar yang benar-benar tersedia. Contoh verifikasi sesi ini memakai artwork yang dibuat oleh tool gambar native lalu dirender lewat Ruby/p5/FFmpeg, tanpa Fal.

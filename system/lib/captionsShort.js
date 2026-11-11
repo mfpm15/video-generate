@@ -1,3 +1,4 @@
+import { safeArea } from './safeArea.js';
 // Short-form captions (9:16): CHUNKED (2-4 words at a time), big and heavy, with a stroke so they read on any background; the word being spoken is highlighted.
 // Effects: pop (bouncy, accent word) | impact (UPPERCASE, highlighter box on the spoken word) | kinetic (words build up and slide in as spoken) | karaoke (dark pill, accent word)
 // Placed inside the common safe area of Shorts / Reels / TikTok: left margin 60, right margin 150 (action buttons), caption centre ~63% of the height (above the bottom UI).
@@ -7,12 +8,12 @@ const eo = x => 1 - Math.pow(1 - x, 3), back = x => { const c = 2.2; return 1 + 
 export const CAPTION_ALIASES = { '01': 'karaoke', '02': 'pop', '03': 'kinetic', '04': 'pop', '05': 'impact', '06': 'pop' };
 export const SHORT_EFFECTS = ['pop', 'impact', 'kinetic', 'karaoke'];
 // bottom = lowest y a caption may reach: TikTok's UI covers roughly the lowest 25 % (the strictest of the three platforms)
-export function shortSafe(W, H) { return { left: 60, right: W - 150, top: 210, bottom: Math.round(H * .75) }; }
+export function shortSafe(W, H, override) { const r = safeArea(W, H, override); return {left: r.x0, right: r.x1, top: r.y0, bottom: r.y1}; }
 
 const cache = new WeakMap();
 function chunksOf(TL) {                                    // 2-4 word chunks per spoken line, split after punctuation
   if (cache.has(TL)) return cache.get(TL); const out = [];
-  TL.voice.forEach(v => { let cur = []; const flush = () => { if (cur.length) { out.push({ id: v.id, words: cur, t0: cur[0].t0, t1: cur[cur.length - 1].t1 }); cur = []; } };
+  [...(TL.voice || []), ...(TL.visual_words || [])].forEach(v => { let cur = []; const flush = () => { if (cur.length) { out.push({ id: v.id, words: cur, t0: cur[0].t0, t1: cur[cur.length - 1].t1 }); cur = []; } };
     v.words.forEach((w, i) => { cur.push(w); const punct = /[.,!?:;]$/.test(w.w), chars = cur.reduce((s, x) => s + x.w.length + 1, 0); if (chars >= 19 || cur.length >= 3 || (punct && cur.length >= 2) || (i + 1 < v.words.length && cur.length >= 3 && v.words[i + 1].w.length > 9)) flush(); }); flush(); });
   out.forEach((c, i) => { const nx = out[i + 1]; c.s = c.t0 - .05; c.e = nx && nx.id === c.id ? nx.t0 - .02 : c.t1 + .35; if (nx && nx.id !== c.id) c.e = Math.min(c.e, nx.t0 - .05); });
   cache.set(TL, out); return out;
@@ -20,7 +21,7 @@ function chunksOf(TL) {                                    // 2-4 word chunks pe
 export function drawShortCaption(g, t, o) {
   const { W, H, timeline: TL } = o, th = { accent: '#B7F34A', text: '#ffffff', family: 'Inter, sans-serif', ...(o.theme || {}) }, eff = SHORT_EFFECTS.includes(o.effect) ? o.effect : (CAPTION_ALIASES[o.effect] || 'pop');
   const ch = chunksOf(TL).find(c => t >= c.s && t < c.e); if (!ch) return null;
-  const S = shortSafe(W, H), maxW = S.right - S.left - (eff === 'karaoke' ? 100 : 40), cx = (S.left + S.right) / 2, up = eff === 'impact', px = Math.round(W * (up ? .088 : .082)), lh = px * 1.16;
+  const S = shortSafe(W, H, o.safeZone), maxW = S.right - S.left - (eff === 'karaoke' ? 100 : 40), cx = (S.left + S.right) / 2, up = eff === 'impact', px = Math.round(W * (up ? .088 : .082)), lh = px * 1.16;
   g.save(); g.textBaseline = 'middle'; g.textAlign = 'center'; g.lineJoin = 'round'; g.font = `900 ${px}px ${th.family}`;
   const words = ch.words.map(w => ({ ...w, s: up ? w.w.toUpperCase() : w.w })), sp = g.measureText(' ').width * 1.35; words.forEach(w => w.wd = g.measureText(w.s).width);
   const rows = [[]]; let rw = 0; words.forEach(w => { if (rw + w.wd > maxW && rows[rows.length - 1].length) { rows.push([]); rw = 0; } rows[rows.length - 1].push(w); rw += w.wd + sp; });

@@ -2,6 +2,12 @@
 
 These local rules take precedence over upstream workflow defaults for this repository. The toolkit's API/model schemas still apply.
 
+## Ordered intake and local automation
+
+In this repository follow `system/CLAUDE-WORKFLOW.md`: title → ask description/story first → analyze/verify → explain three suitable looks with reasons, engine and costs → selection (or explicitly requested automatic choice) → automatic production and QA. Do not ask style before analyzing the description. Preserve already supplied answers/authorization. The agent writes all internal files and executes dependency checks, rendering, FFmpeg and repairs; the user need not edit files or run terminal commands. All paid generation still needs actual bounded authorization. State whether execution is on the user laptop or in cloud; never infer access to their laptop.
+
+When the user explicitly requests no Fal, read [Local-only mode](local-mode.md). Local editing/rendering from available artwork does not require a Fal key; it is not H3/generative acting and may require supplied assets or an actually available local image model.
+
 ## Routing and execution
 
 - `/buat-anime` is the Indonesian intake command; `/make-an-anime` loads this project skill directly. `/buat-video` and `/buat-seri` continue to use Lemo-Opuscar unless the user explicitly requests the anime workflow.

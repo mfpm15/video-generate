@@ -1,0 +1,47 @@
+[
+  {
+    "id": "s1",
+    "text": "Bukan sekadar chat.",
+    "scene": {
+      "type": "statement",
+      "head": "Bukan sekadar chat."
+    },
+    "caption": "Dari satu pesan."
+  },
+  {
+    "id": "s2",
+    "text": "Satu tujuan.",
+    "scene": {
+      "type": "statement",
+      "head": "Satu tujuan."
+    },
+    "caption": "Tentukan tujuan."
+  },
+  {
+    "id": "s3",
+    "text": "Pecah jadi langkah.",
+    "scene": {
+      "type": "statement",
+      "head": "Pecah jadi langkah."
+    },
+    "caption": "Susun langkah."
+  },
+  {
+    "id": "s4",
+    "text": "Jalankan. Periksa.",
+    "scene": {
+      "type": "statement",
+      "head": "Jalankan. Periksa."
+    },
+    "caption": "Jalankan, lalu cek."
+  },
+  {
+    "id": "s5",
+    "text": "Kamu mengarahkan.",
+    "scene": {
+      "type": "statement",
+      "head": "Kamu mengarahkan."
+    },
+    "caption": "Kamu pegang arah."
+  }
+]

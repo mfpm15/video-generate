@@ -1,38 +1,15 @@
 ---
-description: Buat SERIES Shorts (10-14 bagian) dari satu judul, satu style terkunci, riset dan fakta diverifikasi, thumbnail + caption + hashtag + jadwal siap posting manual.
-argument-hint: "Judul seri [| deskripsi] [| jumlah bagian] [| style]"
+description: Judul seri → deskripsi → riset/verifikasi → daftar rekomendasi style → pilihan → seluruh episode diproduksi dan diperiksa otomatis.
+argument-hint: "Judul seri [| deskripsi] [| jumlah bagian] [| gaya atau otomatis]"
 ---
 
-Baca juga `system/QUALITY-GATES.md`: kualitas upstream dan danger zone (UI/crop serta pitfalls style) adalah quality gate untuk setiap hasil. Claude menanganinya otomatis dari brief; jangan meminta user mengedit file. Jangan melaporkan kualitas setara atau siap posting sebelum ada bukti review video, safe zone, audio dan QA.
+Input pengguna: $ARGUMENTS
 
-Kamu memproduksi seri video edukasi VERTIKAL 9:16 (Shorts/Reels/TikTok/Facebook, ditonton di HP) di root checkout proyek saat ini, dengan mesin 3D (`system/lib/e3d.js`). Istilah teknis boleh bahasa Inggris. Pengguna menjalankan ini malam hari lalu tidur, jadi **bekerja sendiri sampai selesai, boleh memakan waktu lama, tanpa pertanyaan di tengah jalan**. Pengguna memposting MANUAL; kamu tidak memposting apa pun. Baca `system/README.md` dan CLAUDE.md bila belum. Jawab dalam bahasa pengguna. Input: $ARGUMENTS
+Baca `system/CLAUDE-WORKFLOW.md` dan jalankan urutannya dalam bahasa pengguna. Bila hanya judul, tanyakan deskripsi terlebih dahulu (boleh sekaligus jumlah episode: 14 default bila tanpa preferensi). Verifikasi brief/fakta, baru tampilkan 3 rekomendasi look dalam tabel jelas beserta alasan, engine dan biaya, ditambah otomatis/gaya sendiri. Jangan memilih style final sebelum deskripsi dianalisis. Jika pilihan sudah diberikan, jangan tanyakan ulang.
 
-## Routing engine
+Sesudah pilihan, default kerjakan seluruh seri sampai selesai tanpa checkpoint tambahan; mode pilot/outline hanya jika diminta. Kunci look/cast/kontrak bersama, verifikasi frame pilot, lalu lanjut semua episode. Pengguna tidak perlu mengedit style.md, JSON, naskah atau menjalankan terminal sendiri. Default engine Opuscar; anime hanya bila dipilih eksplisit, melalui skill anime dan izin biaya yang nyata, bukan `system/series.py`.
 
-Default command ini tetap Lemo-Opuscar. Jika pengguna secara eksplisit meminta toolkit/engine `make-an-anime` atau alur `/buat-anime`, muat `.claude/skills/make-an-anime/SKILL.md` dan jalankan workflow anime dengan brief, style, durasi dan jumlah episode yang sama. Untuk seri anime, pertahankan style/cast bersama dan rencana per episode di workspace `anime/<slug>/`; jangan menjalankan `system/series.py` pada format anime. Kata “anime” sebagai deskripsi look saja tidak otomatis mengizinkan Fal berbayar atau mengganti engine.
-
-## Arahan dinamis dari pengguna
-
-Terima cerita, style bebas, referensi visual, template dan revisi langsung dari chat/$ARGUMENTS, termasuk gaya di luar katalog. Pengguna tidak perlu membuka/mengedit STYLE.md atau file config apa pun. Claude yang menyusun style bible/kontrak dan implementasinya otomatis dari brief; baca STYLE.md hanya bila style resmi diminta. Pertahankan gaya seri kecuali user mengubahnya; perubahan terbaru diterapkan ke episode terkait dengan dampak render/biaya dijelaskan. Jangan mengulang pertanyaan style jika sudah dijawab di chat.
-
-## Pilihan template/style untuk seluruh seri (prioritas atas default lama)
-
-Baca `system/STYLE-WORKFLOW.md`. Gunakan root checkout aktual. Kunci mode `template` atau `custom` bersama style pada `series/<slug>/STYLE-CONTRACT.md`, dan catat mode di `series.json` agar sesi berikutnya mempertahankannya. Jika pengguna memilih style resmi tanpa meminta template, gunakan custom; jangan membatasi semua style menjadi empat dunia 3D. Tentukan mode implementasi dari brief; jangan meminta user memilih detail teknis bila gaya sudah jelas. Pilihan eksplisit menang atas default engine 3D di bawah.
-
-`series.py scaffold` hanya menghasilkan stub template. Sebelum build, terapkan kontrak ke SETIAP `film.json`, palet dan renderer: custom memerlukan `render: "custom"` dan `main.js` khusus yang memenuhi STYLE.md; template memakai renderer bersama dan tidak boleh disebut implementasi asli style. Scaffold memanggil art director topik, jadi pulihkan palet style yang disetujui pada setiap bagian bila style eksplisit. Pertahankan renderer bersama khusus seri bila perlu, tanpa memodifikasi library upstream. Review frame pilot terhadap kontrak sebelum merender semua episode; lanjutkan sendiri bila sesuai, tanpa checkpoint baru kecuali diminta pengguna. Buat thumbnail dari renderer yang benar. Jika library/style belum tersedia atau renderer belum sesuai, laporkan BLOCKED/LIMITED dan jangan mengganti style secara diam-diam.
-
-Untuk gaya bebas di luar katalog, `series.py init --style AUTO` hanya menyiapkan scaffold. Catat `requested_style`/`style_name` dari percakapan di seri dan setiap film, lalu terapkan renderer/palet sesuai brief sebelum build. Jangan kirim deskripsi bebas sebagai slug katalog dan jangan membiarkan label bawaan scaffold menjadi pilihan final.
-
-## 0. Peringatan singkat di awal (satu paragraf, lalu lanjut)
-Laptop harus tetap menyala dan tercolok (skrip build mencegah tidur, tapi jangan ditutup). Izin tool (Bash, Edit, WebSearch) sebaiknya sudah diizinkan, karena permintaan izin akan menghentikan pekerjaan sampai pagi. Sebutkan ini sekali.
-
-## 1. Analisis judul, lalu tanya SEKALI
-Analisis judul dan deskripsi dulu (topik, penonton, tingkat kesulitan). Lalu satu panggilan AskUserQuestion:
-- **Deskripsi** (bila belum ada): "Bebas, Claude riset dan tentukan (Recommended)" / "Saya tulis sendiri" (Other).
-- **Jumlah bagian**: 14 (Recommended: 7 hari x 2 post) / 12 / 10; Other = angka lain (maks 14).
-- **Style (terkunci untuk seluruh seri)**: input bebas atau 3 rekomendasi berdasar analisis (katalog `system/styles-catalog.json` hanya sumber contoh) (nama, alasan, renderer dan ciri visual sesuai STYLE.md) + "Otomatis (Recommended)". Other = nomor/nama dari `system/styles-catalog.md`. Satu style (jadi satu dunia 3D, palet, caption dan palet suara) untuk SELURUH seri supaya terlihat satu seri; variasi datang dari ilustrasi 3D, kamera dan susunan adegan.
-- **Mode**: "Langsung semua sampai selesai (Recommended, bisa ditinggal tidur)" / "Berhenti setelah outline untuk saya setujui" / "Pilot bagian 1-2 dulu".
-Default: 9:16 1080x1920, bahasa judul, 30 fps (60 bila style 60 fps), engine 3D. Setelah jawaban, jangan bertanya lagi.
+Ikuti `system/STYLE-WORKFLOW.md`, `system/VIDEO-RULES.md`, dan `system/QUALITY-GATES.md`. Scaffold hanya stub; Claude harus menerapkan renderer custom bila dipilih. `series.py init` mendukung `--render`, `--engine`, dan `--requested-style`. Untuk gaya bebas gunakan slug scaffold AUTO lalu terapkan art direction dari chat. Tulis setiap posts/pNN.json sebelum build; runner menyalinnya ke film/post.json. Build tidak boleh sukses/resume hanya karena MP4 ada. Periksa semua deliverable dan QA. Pengguna memposting manual.
 
 ## 2. Riset mendalam (lambat dan teliti itu benar)
 - Gunakan WebSearch (mode extended untuk fakta sulit/terbaru) dan WebFetch pada sumber primer: standar/RFC, dokumentasi resmi, universitas, lembaga pemerintah/internasional, jurnal. Hindari blog anonim dan konten generik sebagai satu-satunya sumber.

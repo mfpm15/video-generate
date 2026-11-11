@@ -1,13 +1,13 @@
 # Cara memulai (Windows)
 
-Folder proyek: `D:\content-video-generate`. Peta folder dan aturan ada di `system/README.md`.
+Folder proyek: root repo yang Anda buka di Claude Code pada laptop. Peta folder dan aturan ada di `system/README.md`.
 
 ## Video baru
 Di Claude Code (Git Bash) ketik:
 ```
 /buat-video Judul video Anda
 ```
-Claude menanyakan SEKALI (deskripsi dan style dari 66 pilihan). Setelah itu semuanya otomatis: folder `films/<slug>/` dibuat otomatis, video dibuat, dan hasilnya ada di `films/<slug>/final/` (mp4, thumbnail.jpg, POST.md, QA-REPORT.md, CREDITS).
+Claude menanyakan deskripsi, memverifikasinya, lalu menampilkan rekomendasi style yang jelas (atau menerima gaya bebas). Setelah Anda memilih/menyerahkan pilihan otomatis, semuanya otomatis: folder `films/<slug>/` dibuat otomatis, video dibuat, dan hasilnya ada di `films/<slug>/final/` (mp4, thumbnail.jpg, POST.md, QA-REPORT.md, CREDITS).
 
 ## Perintah manual (opsional)
 ```

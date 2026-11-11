@@ -9,19 +9,11 @@ Input pengguna: $ARGUMENTS
 
 Baca `.claude/skills/make-an-anime/SKILL.md` dan referensi integrasi repositorinya. Gunakan skill itu untuk eksekusi. Jawab dalam bahasa pengguna. Root proyek adalah checkout saat ini, bukan path Windows tetap.
 
-## Input visual dinamis
+## Intake bertahap dan otomatis
 
-Pengguna memberi cerita/gaya/template/referensi atau revisi langsung lewat percakapan. Terima bahasa bebas dan gabungan gaya; jangan membatasi ke preset atau meminta user mengedit style.md. Claude yang membuat/memperbarui style bible, kontrak, prompt dan overlay otomatis berdasarkan input terbaru. Bila gaya sudah jelas, lanjutkan tanpa menanyakan pilihan katalog. File internal menjaga konsistensi antarshot, bukan menggantikan input dinamis user.
+Jalankan `system/CLAUDE-WORKFLOW.md`: judul → tanyakan deskripsi/cerita dahulu → analisis/verifikasi → tabel 3 rekomendasi look yang jelas, plus otomatis/gaya sendiri → pilihan → produksi dan QA otomatis. Jika deskripsi/gaya sudah diberikan, jangan tanyakan ulang. Pengguna cukup bicara di chat; Claude menulis style bible, plan, prompt, config dan renderer. Jangan mewajibkan edit STYLE.md atau pilihan preset statis.
 
-## Intake dan style
-
-1. Baca cerita/file yang diberikan. Jika hanya judul, tawarkan cerita singkat berdasarkan judul; jika revisi video, periksa sumber dan jelaskan apakah cukup edit lokal atau membutuhkan generasi ulang. Jangan mengklaim ada filter video-ke-anime otomatis.
-2. Tanyakan sekaligus hanya informasi yang belum tersedia: cerita/deskripsi, **template atau style visual**, durasi, dan format. Tawarkan beberapa look konkret sesuai topik (misalnya cel-shaded aksi, slice-of-life pastel, drama sinematik); nama itu arahan kreatif, bukan preset renderer teruji. Untuk Shorts usulkan 9:16, 24 fps, dialog sesuai bahasa brief. Pilihan eksplisit pengguna selalu diutamakan.
-3. Template contoh bawaan boleh dipakai hanya bila dipilih pengguna. Jika style sendiri, tulis art direction sendiri. Baca contoh wajib untuk teknik, jangan menyalin tokoh/ceritanya sebagai hasil pengguna.
-4. Inisialisasi project baru `anime/<slug>/` lewat Ruby CLI skill, dengan path cerita dan project absolut. Jangan menulis output di folder skill atau menimpa proyek yang sudah ada.
-5. Kunci `config/style.md`, `docs/STYLE-CONTRACT.md` dan `docs/PLAN.md`: template/style terpilih, referensi, linework, desain karakter, shading, lighting, palet, komposisi, kamera, gerak, caption, suara, ukuran/fps, shot list, jumlah panggilan berbayar dan allowance retry. Pertahankan style itu pada semua scene/episode.
-
-Untuk permintaan seri, susun rencana per episode dengan cast/style bersama dan total budget, simpan workspace di `anime/<slug>/`. Selesaikan pilot dan review look sebelum episode berikutnya; lanjutkan semua episode dalam izin yang sudah diberikan. Jangan memakai `system/series.py` karena formatnya khusus Opuscar.
+Verifikasi fiksi untuk konsistensi cerita; verifikasi fakta nyata dengan sumber. Template contoh hanya dipakai jika dipilih. Inisialisasi proyek baru `anime/<slug>/` lewat CLI Ruby skill dengan path absolut; jangan menimpa repo/film/proyek lain. Kunci cast/style dan budget untuk seri, review pilot lalu lanjut sendiri dalam izin yang ada.
 
 ## Persiapan, biaya, produksi
 
@@ -34,3 +26,7 @@ Untuk permintaan seri, susun rencana per episode dengan cast/style bersama dan t
 ## Hasil
 
 Simpan video bersih dan final dengan caption terbakar, credit/lisensi, plan, style contract dan laporan QA di proyek anime. Sertakan branding `ngetehnology` melalui overlay anime sesuai brief. Tidak ada publikasi otomatis atau `.srt` tambahan. Laporkan lokasi output, style/template yang benar-benar diterapkan, biaya/panggilan aktual dan batasan yang tersisa. Lemo-Opuscar tetap dipakai oleh `/buat-video` dan `/buat-seri`; format proyek kedua engine berbeda.
+
+## Tanpa Fal bila diminta
+
+Ikuti `.claude/skills/make-an-anime/references/local-mode.md`. Gunakan `python system/doctor.py --engine anime-local`; jangan memblokir editing/render lokal hanya karena key Fal kosong. Perlu artwork/footage yang tersedia atau model gambar lokal/tool gambar yang benar-benar tersedia. Labeli sebagai motion-comic/compositing, bukan gerak generatif H3. Jangan menjanjikan Claude Code bisa membuat artwork offline dari judul tanpa aset/model.

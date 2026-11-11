@@ -25,7 +25,7 @@ D:\content-video-generate
 ```
 
 ## Daily use
-Just type `/buat-video Judul` in Claude Code. It asks once (description + style), then does everything: research, script, build, visual review loop, QA, social pack. Manual steps below.
+Just type `/buat-video Judul` in Claude Code. It asks for the description, verifies it, presents suitable looks, then after selection does everything: research, script, build, visual review loop, QA, social pack. Manual steps below.
 ```
 sh system/new-film.sh "Judul" --style <slug|nomor|AUTO> [--size 1080x1920] [--lang id|en] [--minutes 1.5]
 # edit films/<slug>/lines.json  (or let Claude write it)
@@ -68,3 +68,8 @@ Style looks in template mode: per-style accent colour + tinted background taken 
 Claude Code sekarang juga memiliki `/buat-anime` dan skill `/make-an-anime`; lihat [panduan anime](../docs/ANIME.md). Lemo-Opuscar tetap dipakai oleh `/buat-video` dan `/buat-seri`.
 
 Sebelum produksi baca [kontrak template/style](STYLE-WORKFLOW.md). Renderer bersama 2D/3D di atas adalah template. Style resmi yang dipilih pengguna memerlukan implementasi custom berdasarkan STYLE.md dan review frame; nama style atau perubahan palet saja tidak membuktikan fidelity. Pilihan mode dan style dikunci untuk seluruh seri.
+
+
+## Alur dan QA aktif
+
+Urutan terbaru ada di [CLAUDE-WORKFLOW.md](CLAUDE-WORKFLOW.md). Build sekarang memblokir stub custom, input/posting pack yang belum lengkap, ASR/tool error dan QA gagal. `final/QA-RESULTS.json` mengikat pengukuran ke hash video dan input, sehingga MP4 parsial atau QA lama tidak cukup untuk resume seri. `review.sh` membuat sheet bersih dan mask danger zone terpisah. Caption dan brand berbagi safe area yang bisa diatur Claude dari brief pada `film.json.safe_zone` (rectangle ternormalisasi). User tidak perlu mengedit file tersebut.

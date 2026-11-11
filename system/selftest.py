@@ -17,9 +17,9 @@ for mod in ('faster_whisper', 'edge_tts', 'soundfile', 'numpy', 'scipy', 'PIL'):
     try: __import__(mod); rec(f'import {mod}', 'PASS')
     except Exception as e: rec(f'import {mod}', 'FAIL', str(e)[:80])
 # 2 disk
-for d in ('C:\\', 'D:\\'):
-    try: free = shutil.disk_usage(d).free / 2 ** 30; rec(f'disk free {d}', 'PASS' if free > 3 else 'WARN', f'{free:.1f} GB' + ('' if free > 3 else ' (low: project writes to D:, tools/cache to C:)'))
-    except Exception as e: rec(f'disk {d}', 'WARN', str(e)[:60])
+for d in (ROOT, LIB):
+    try: free = shutil.disk_usage(d).free / 2 ** 30; rec(f'disk free {d}', 'PASS' if free > 3 else 'WARN', f'{free:.1f} GB')
+    except OSError as e: rec(f'disk {d}', 'WARN', str(e))
 # 3 file integrity
 need = ['CLAUDE.md', 'MASTER-PROMPT.md', 'START-HERE.md', '.claude/commands/buat-video.md', '.claude/commands/buat-seri.md', 'system/build.sh', 'system/qa.sh', 'system/new-film.sh', 'system/clean.sh', 'system/review.sh', 'system/thumb.sh', 'system/series.py',
         'system/lib/captions.js', 'system/lib/scenes.js', 'system/lib/illus.js', 'system/lib/thumb.js', 'system/audio/mixlib.py', 'system/audio/timbres.py', 'system/py/make_timeline.py', 'system/py/qa_asr.py', 'system/py/make_report.py', 'system/py/make_post.py', 'system/py/thumb_sheet.py',
@@ -36,15 +36,17 @@ for f in ('system/audio/mixlib.py', 'system/audio/timbres.py', 'system/series.py
 # 4 upstream library untouched, 5 settings
 g = run(['git', '-C', LIB, 'status', '--porcelain']); dirty = [l for l in g.stdout.split('\n') if l.strip() and not any(x in l for x in ('node_modules', '.venv', 'voices', '__pycache__'))]
 rec('upstream library untouched', 'PASS' if g.returncode == 0 and not dirty else 'WARN', 'clean' if not dirty else f'{len(dirty)} changed: ' + '; '.join(dirty[:4]))
-sp = os.path.expanduser('~/.claude/settings.json')
-try: s = open(sp, encoding='utf-8').read(); json.loads(s); rec('~/.claude/settings.json', 'PASS' if 'ghostex' not in s.lower() else 'WARN', 'valid JSON' + ('' if 'ghostex' not in s.lower() else ', still mentions ghostex'))
-except Exception as e: rec('~/.claude/settings.json', 'FAIL', str(e)[:80])
+# Per-user Claude settings are not a required production dependency and are not inspected.
 # 6 TTS network (real call)
+os.makedirs(os.path.join(ROOT, 'system', 'logs'), exist_ok=True)
 tmp = os.path.join(ROOT, 'system', 'logs', '_tts_probe.mp3')
-r = run([sys.executable, '-m', 'edge_tts', '--voice', 'id-ID-ArdiNeural', '--text', 'Uji suara.', '--write-media', tmp], timeout=90); ok = os.path.exists(tmp) and os.path.getsize(tmp) > 1000
-rec('edge-tts online (id-ID-ArdiNeural)', 'PASS' if ok else 'FAIL', f'{os.path.getsize(tmp)} bytes' if ok else (r.stderr or r.stdout)[-120:]); os.path.exists(tmp) and os.remove(tmp)
+if quick:
+    rec('edge-tts online', 'NOT TESTED', '--quick does not make network requests')
+else:
+    r = run([sys.executable, '-m', 'edge_tts', '--voice', 'id-ID-ArdiNeural', '--text', 'Uji suara.', '--write-media', tmp], timeout=90); ok = os.path.exists(tmp) and os.path.getsize(tmp) > 1000
+    rec('edge-tts online (id-ID-ArdiNeural)', 'PASS' if ok else 'FAIL', f'{os.path.getsize(tmp)} bytes' if ok else (r.stderr or r.stdout)[-120:]); os.path.exists(tmp) and os.remove(tmp)
 # 7 caption lab
-r = run(['node', os.path.join(ROOT, 'system', 'tools', 'caption-lab.mjs')], cwd=ROOT, env=dict(os.environ, LIB=LIB), timeout=600); rec('caption lab (6 effects x 2 orientations x 2 lines)', 'PASS' if 'ALL OK' in r.stdout else 'FAIL', r.stdout.strip().split('\n')[-1][:100])
+r = run(['node', os.path.join(ROOT, 'system', 'tools', 'caption-lab.mjs')], cwd=ROOT, env=dict(os.environ, LIB=LIB), timeout=600); rec('caption lab (6 effects x 2 orientations x 2 lines)', 'PASS' if r.returncode == 0 and 'ALL OK' in r.stdout else 'FAIL', r.stdout.strip().split('\n')[-1][:100])
 for d in ('_lib', 'fonts', 'out'): shutil.rmtree(os.path.join(ROOT, 'system', 'lab', 'captions', d), ignore_errors=True)
 # 8 real end-to-end 9:16 build
 if not quick:
@@ -55,8 +57,9 @@ if not quick:
          {'id': 'v2', 'text': 'Ia memeriksa seluruh alur produksi dari awal sampai akhir.', 'scene': {'type': 'statement', 'head': 'Memeriksa *seluruh alur*', 'sub': 'Dari naskah sampai video', 'visual': {'kind': 'steps', 'items': ['Naskah', 'Render', 'Mix', 'QA']}}},
          {'id': 'v3', 'text': 'Hasilnya dicatat sebagai lulus atau gagal.', 'scene': {'type': 'number', 'value': 100, 'suffix': '%', 'label': 'diperiksa otomatis'}}]
     json.dump(L, open(os.path.join(D, 'lines.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    json.dump({'title': 'Uji', 'caption': 'Uji alur.', 'hashtags': ['#uji', '#video', '#edukasi', '#teknologi'], 'pinned_comment': 'Uji mandiri', 'sources': ['local synthetic test']}, open(os.path.join(D, 'post.json'), 'w', encoding='utf-8'))
     r = sh([os.path.join(ROOT, 'system', 'build.sh'), slug], timeout=1500); mp4 = os.path.join(D, 'final', slug + '.mp4')
-    rec('build.sh end-to-end 9:16 (TTS, ASR, render, mix, mux, QA)', 'PASS' if os.path.exists(mp4) else 'FAIL', f'{time.time() - t0:.0f} s' if os.path.exists(mp4) else r.stdout[-300:])
+    rec('build.sh end-to-end 9:16 (TTS, ASR, render, mix, mux, QA)', 'PASS' if r.returncode == 0 and os.path.exists(mp4) else 'FAIL', f'{time.time() - t0:.0f} s' if os.path.exists(mp4) else r.stdout[-300:])
     if os.path.exists(mp4):
         pr = run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_name,width,height,r_frame_rate', '-of', 'csv=p=0', mp4]).stdout.split(); rec('output format', 'PASS' if any('1080,1920' in x for x in pr) else 'FAIL', ' | '.join(pr))
         q = open(os.path.join(D, 'final', 'QA-REPORT.md'), encoding='utf-8').read(); bad = [l.split('|')[1].strip() for l in q.split('\n') if '| FAILED' in l]
@@ -68,7 +71,7 @@ if not quick:
         r = sh([os.path.join(ROOT, 'system', 'clean.sh'), slug]); rec('clean.sh', 'PASS' if not os.path.exists(os.path.join(D, 'out')) and os.path.exists(mp4) else 'FAIL', r.stdout.strip()[-100:])
     shutil.rmtree(D, ignore_errors=True); rec('temporary film removed', 'PASS' if not os.path.exists(D) else 'WARN')
 # report
-n = {k: sum(1 for x in R if x[1] == k) for k in ('PASS', 'WARN', 'FAIL')}
+n = {k: sum(1 for x in R if x[1] == k) for k in ('PASS', 'WARN', 'FAIL', 'NOT TESTED')}
 L = [f'# Selftest {datetime.datetime.now():%Y-%m-%d %H:%M}' + (' (quick)' if quick else ''), '', f'PASS {n["PASS"]} | WARN {n["WARN"]} | FAIL {n["FAIL"]}', '', '| Check | Status | Detail |', '|---|---|---|'] + [f'| {a} | {b} | {c.replace("|", "/")} |' for a, b, c in R]
 L += ['', 'Not covered by any script: watching a video with sound, and the truth of the facts in a script (needs a human).']
 os.makedirs(os.path.join(ROOT, 'system', 'logs'), exist_ok=True); p = os.path.join(ROOT, 'system', 'logs', f'selftest-{datetime.datetime.now():%Y%m%d-%H%M%S}.md'); open(p, 'w', encoding='utf-8').write('\n'.join(L) + '\n')

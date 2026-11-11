@@ -37,7 +37,7 @@ function buildScene(S, i) {
   const add = (b, id, delay = 0) => { group.add(b.group); blocks.push({ b, delay }); texts.push({ id, text: b.text, obj: b.group, pass: false }); return b; };
   const hasVis = !!sc.visual && ['title', 'statement', 'quote'].includes(type_);
   const mkHead = (str, px0, y) => { let b = type.words(str, { px: px0, maxW: 6.6, y, extrude: 6, id: S.id + 'h', color: HC }); if (b.height / (px0 * 1.12 / PXU) > 2.1 && px0 > 90) b = type.words(str, { px: Math.round(px0 * .82), maxW: 6.6, y, extrude: 6, id: S.id + 'h', color: HC }); return b; };
-  let yTop = 5.3;
+  let yTop = 4.5;
   if (type_ === 'number') {
     const full = (sc.prefix || '') + sc.value.toLocaleString('id-ID') + (sc.suffix || ''), num = type.dyn({ px: 300, maxW: 7.6, color: P.accent, extrude: 8 }); num.group.position.set(0, 3.5, 0); group.add(num.group); num.set(full);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(2.9, .03, 8, 120), world.mats.glow(P.accent, 1.5)); ring.position.set(0, 3.5, -1); group.add(ring); const ring2 = ring.clone(); ring2.scale.setScalar(1.12); group.add(ring2);
@@ -96,10 +96,11 @@ const rgba = (hex, a) => { const p = [1, 3, 5].map(i => parseInt(hex.slice(i, i 
 function drawOverlay(t) {
   g2.clearRect(0, 0, W, H); g2.fillStyle = rgba(P.accent, .95); g2.fillRect(0, 0, W * clamp(t / TL.dur), 5);
   badges = drawBrand(g2, { W, H, t, TL, F, P, BR });
-  window.__capBox = drawShortCaption(g2, t, { effect: F.caption || 'pop', W, H, timeline: TL, theme: { accent: P.accent, text: '#ffffff', family: P.family } });
+  window.__capBox = drawShortCaption(g2, t, { effect: F.caption || 'pop', safeZone: F.safe_zone, W, H, timeline: TL, theme: { accent: P.accent, text: '#ffffff', family: P.family } });
 }
 let badges = [], lastTexts = [];
 
+let lastTextTime = null;
 // ───────────── frame ─────────────
 function render(t) {
   if (THUMB) return renderThumb();
@@ -110,9 +111,10 @@ function render(t) {
   rig(S, tl, t); world.update(t); post.bloom.strength = BASE_BLOOM + (i > 0 ? .9 * Math.exp(-tl / .14) : 0);
   post.composer.render(); drawOverlay(t);
   lastTexts = [];
+  lastTextTime = t;
   S.texts.forEach(x => { const b = type.boxOf(x.obj); lastTexts.push(x.pass ? { id: x.id, text: x.text, ...b, pass: true } : { id: x.id, text: x.text, ...b }); }); badges.forEach(b => lastTexts.push({ ...b, pass: true }));
 }
-window.render = render; window.TEXTS = t => { render(t); return lastTexts; };
+window.render = render; window.TEXTS = t => { if (lastTextTime !== t) render(t); return lastTexts; };
 
 // ───────────── thumbnail ─────────────
 let thumbBuilt = false, thumbGroup = null;

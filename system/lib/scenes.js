@@ -110,7 +110,7 @@ function render(t) {
   const i = TL.scenes.findIndex(s => t >= s.t0 && t < s.t1); if (i >= 0) drawScene(TL.scenes[i], t, i);
   g.fillStyle = rgba(P.accent, .9); g.fillRect(0, 0, W * clamp(t / TL.dur), 4);                       // thin progress bar along the top edge
   if (F.series) drawSeries(t);
-  window.__capBox = drawCaption(g, t, { effect: F.caption || '01', W, H, timeline: TL, theme: { family: P.family, accent: P.accent, text: P.fg, dim: P.dim, rtl: F.rtl } });
+  window.__capBox = drawCaption(g, t, { effect: F.caption || '01', safeZone: F.safe_zone, W, H, timeline: TL, theme: { family: P.family, accent: P.accent, text: P.fg, dim: P.dim, rtl: F.rtl } });
 }
 window.render = render; window.TEXTS = t => { render(t); return texts; };
 await Promise.all(['300 40px Inter', '400 40px Inter', '500 40px Inter', '600 40px Inter', '800 40px Inter', '900 40px Inter', '800 100px InterTight'].map(f => document.fonts.load(f))); await document.fonts.ready;

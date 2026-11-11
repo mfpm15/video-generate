@@ -10,6 +10,8 @@ import argparse, ctypes, datetime, json, os, re, shutil, subprocess, sys, time, 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')); LIB = os.environ.get('LIB') or os.path.expanduser('~/lemo-opuscar')
 PY = os.path.join(LIB, '.venv', 'Scripts', 'python.exe') if os.path.exists(os.path.join(LIB, '.venv', 'Scripts', 'python.exe')) else sys.executable
 SH = shutil.which('sh') or 'sh'
+sys.path.insert(0, os.path.join(ROOT, 'system', 'py'))
+from check_deliverables import check as delivery_errors
 def sdir(slug): return os.path.join(ROOT, 'series', slug)
 def load(slug): return json.load(open(os.path.join(sdir(slug), 'series.json'), encoding='utf-8'))
 def save(slug, d): json.dump(d, open(os.path.join(sdir(slug), 'series.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
@@ -24,7 +26,7 @@ def init(a):
     d = sdir(slug)
     if os.path.exists(d): sys.exit(f'series/{slug} already exists (not touching it)')
     os.makedirs(os.path.join(d, 'posts'))
-    S = dict(slug=slug, short=a.short or a.title, title=a.title, description=a.desc, style=a.style, size=a.size, lang=a.lang, total=a.parts, created=str(datetime.date.today()),
+    S = dict(slug=slug, short=a.short or a.title, title=a.title, description=a.desc, style=a.style, render=a.render, engine=a.engine, requested_style=a.requested_style or a.style, size=a.size, lang=a.lang, total=a.parts, created=str(datetime.date.today()),
              schedule=dict(start='', times=['12:00', '19:00']), parts=[dict(n=i, slug=pslug(slug, i), title='', hook='', thumb_text='', status='planned') for i in range(1, a.parts + 1)])
     save(slug, S); json.dump({}, open(os.path.join(d, 'pronunciation.json'), 'w', encoding='utf-8'), indent=1)
     open(os.path.join(d, 'RESEARCH.md'), 'w', encoding='utf-8').write(f'# Research: {a.title}\n\nOne row per factual claim: claim | source URL | date/version | confidence (high/medium/low) | used in part.\nNo claim may appear in a script unless it has a row here.\n\n| Claim | Source | Date | Confidence | Part |\n|---|---|---|---|---|\n')
@@ -37,7 +39,7 @@ def scaffold(a):
         if not p['title'] or os.path.exists(fdir(a.slug, p['n'])): continue
         nxt = S['parts'][i + 1]['title'] if i + 1 < len(S['parts']) else ''
         args = [os.path.join(ROOT, 'system', 'new-film.sh'), p['title'], '--slug', pslug(a.slug, p['n']), '--part', str(p['n']), '--of', str(S['total']), '--next', nxt, '--series', S['title'], '--series-short', S.get('short') or S['title'],
-                '--style', S['style'], '--size', S['size'], '--lang', S['lang'], '--thumb-text', p.get('thumb_text') or p['title'], '--thumb-variant', str(S.get('thumb_variant', 2)), '--desc', p.get('hook', '')]
+                '--style', S['style'], '--render', S.get('render', 'template'), '--engine', S.get('engine', '3d'), '--requested-style', S.get('requested_style', S['style']), '--size', S['size'], '--lang', S['lang'], '--thumb-text', p.get('thumb_text') or p['title'], '--thumb-variant', str(S.get('thumb_variant', 2)), '--desc', p.get('hook', '')]
         if sh(args) == 0: made.append(p['n']); p['status'] = 'scaffolded'
     save(a.slug, S); print('scaffolded parts:', made or 'none new')
 
@@ -67,20 +69,29 @@ def build(a):
         n = p['n']
         if (only and n not in only) or (a.frm and n < a.frm): continue
         fd = fdir(a.slug, n); mp4 = os.path.join(fd, 'final', pslug(a.slug, n) + '.mp4')
-        if not os.path.isdir(fd) or stub(a.slug, n): print(f'part {n}: not scripted yet, skipped'); continue
-        if os.path.exists(mp4) and not a.force: print(f'part {n}: already built, skipped (use --force)'); continue
+        if not os.path.isdir(fd) or stub(a.slug, n):
+            p['status'] = 'INCOMPLETE'; save(a.slug, S); print(f'part {n}: script missing/incomplete'); continue
+        if not delivery_errors(fd) and not a.force:
+            p['status'] = 'built'; save(a.slug, S)
+            print(f'part {n}: already built, skipped (use --force)'); continue
         print(f'part {n}/{S["total"]}: building {pslug(a.slug, n)} ...', flush=True); t0 = time.time(); ch = apply_pron(a.slug, n); rc = 1
+        os.makedirs(os.path.join(fd, 'out'), exist_ok=True)
+        post = os.path.join(sdir(a.slug), 'posts', f'p{n:02d}.json')
+        if os.path.isfile(post): shutil.copyfile(post, os.path.join(fd, 'post.json'))
         for attempt in (1, 2):
             rc = sh([os.path.join(ROOT, 'system', 'build.sh'), pslug(a.slug, n)], log=os.path.join(fd, 'out', f'build-attempt{attempt}.log'))
-            if rc == 0 and os.path.exists(mp4): break
+            if rc == 0 and not delivery_errors(fd): break
             print(f'  attempt {attempt} failed (rc={rc}); ' + ('retrying' if attempt == 1 else 'giving up'), flush=True)
-        if os.path.exists(mp4):
-            sh([os.path.join(ROOT, 'system', 'thumb.sh'), pslug(a.slug, n)], log=os.path.join(fd, 'out', 'thumb.log')); p['status'] = 'built'
+        if rc == 0 and not delivery_errors(fd):
+            thumb_rc = sh([os.path.join(ROOT, 'system', 'thumb.sh'), pslug(a.slug, n)], log=os.path.join(fd, 'out', 'thumb.log'))
+            p['status'] = 'built' if thumb_rc == 0 and not delivery_errors(fd) else 'FAILED'
         else: p['status'] = 'FAILED'
         p['built_s'] = round(time.time() - t0); p['qa'] = qa_summary(a.slug, n); save(a.slug, S); print(f"  -> {p['status']} in {p['built_s']} s | pronunciation fixes {ch} | {p['qa']}", flush=True)
     try: ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
     except Exception: pass
     report(a.slug)
+    selected = [p for p in S['parts'] if (not only or p['n'] in only) and (not a.frm or p['n'] >= a.frm)]
+    return 1 if not selected or any(p['status'] != 'built' or delivery_errors(fdir(a.slug, p['n'])) for p in selected) else 0
 
 def report(slug):
     S = load(slug); L = [f"# SERIES REPORT: {S['title']}", '', f'Generated {datetime.datetime.now():%Y-%m-%d %H:%M}. Style `{S["style"]}`, {S["size"]}, {S["total"]} parts.', '', '| Part | Title | Status | Build time | QA (from each QA-REPORT.md) |', '|---|---|---|---|---|']
@@ -91,7 +102,7 @@ def report(slug):
 def status(a):
     S = load(a.slug)
     for p in S['parts']:
-        fd = fdir(a.slug, p['n']); built = os.path.exists(os.path.join(fd, 'final', p['slug'] + '.mp4')); post = os.path.exists(os.path.join(sdir(a.slug), 'posts', f"p{p['n']:02d}.json"))
+        fd = fdir(a.slug, p['n']); built = not delivery_errors(fd); post = os.path.exists(os.path.join(sdir(a.slug), 'posts', f"p{p['n']:02d}.json"))
         print(f"{p['n']:>2} {'scripted' if os.path.isdir(fd) and not stub(a.slug, p['n']) else 'no-script':9} {'BUILT' if built else '-':5} {'post.json' if post else '-':9} {p['title']}")
 
 def schedule(a):
@@ -99,7 +110,7 @@ def schedule(a):
     L = [f"# SCHEDULE: {S['title']}", '', f'You post manually. Start {start}, {len(times)} posts a day at {", ".join(times)} (suggestions: adjust to your own analytics once you have some). Nothing is published automatically.', '']
     for p in S['parts']:
         n = p['n']; pj = os.path.join(sdir(a.slug), 'posts', f'p{n:02d}.json'); fd = fdir(a.slug, n)
-        if os.path.exists(pj) and os.path.isdir(fd): subprocess.run([PY, os.path.join(ROOT, 'system', 'py', 'make_post.py'), pj, os.path.join(fd, 'final', 'POST.md'), os.path.join(fd, 'film.json')], check=False)
+        if os.path.exists(pj) and os.path.isdir(fd): subprocess.run([PY, os.path.join(ROOT, 'system', 'py', 'make_post.py'), pj, os.path.join(fd, 'final', 'POST.md'), os.path.join(fd, 'film.json')], check=True)
     day = None
     for p in S['parts']:
         n = p['n']; d = start + datetime.timedelta(days=(n - 1) // len(times)); t = times[(n - 1) % len(times)]
@@ -114,8 +125,8 @@ def clean(a):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
-    i = sp.add_parser('init'); i.add_argument('slug'); i.add_argument('--title', required=True); i.add_argument('--style', default='AUTO'); i.add_argument('--parts', type=int, default=14); i.add_argument('--size', default='1080x1920'); i.add_argument('--lang', default='id'); i.add_argument('--desc', default=''); i.add_argument('--short', default=''); i.set_defaults(f=init)
+    i = sp.add_parser('init'); i.add_argument('slug'); i.add_argument('--title', required=True); i.add_argument('--style', default='AUTO'); i.add_argument('--render', choices=['template', 'custom'], default='template'); i.add_argument('--engine', choices=['2d', '3d'], default='3d'); i.add_argument('--requested-style', default=''); i.add_argument('--parts', type=int, default=14); i.add_argument('--size', default='1080x1920'); i.add_argument('--lang', default='id'); i.add_argument('--desc', default=''); i.add_argument('--short', default=''); i.set_defaults(f=init)
     for nm, f in (('scaffold', scaffold), ('status', status), ('clean', clean)): x = sp.add_parser(nm); x.add_argument('slug'); x.set_defaults(f=f)
     b = sp.add_parser('build'); b.add_argument('slug'); b.add_argument('--only'); b.add_argument('--from', dest='frm', type=int); b.add_argument('--force', action='store_true'); b.set_defaults(f=build)
     s = sp.add_parser('schedule'); s.add_argument('slug'); s.add_argument('--start'); s.add_argument('--times'); s.set_defaults(f=schedule)
-    a = ap.parse_args(); a.f(a)
+    a = ap.parse_args(); sys.exit(a.f(a) or 0)

@@ -4,7 +4,7 @@ lines.json item: {"id","text","scene":{...} | "beats":[{"at":0,...scene},{"at":<
 Silences: every "silence" > 0, plus the last 0.5 s, plus (if fewer than 2) one 0.8 s window before the middle line."""
 import json, os, sys
 D = os.path.abspath(sys.argv[1]); F = json.load(open(f'{D}/film.json', encoding='utf-8'))
-lines = json.load(open(f'{D}/lines.json', encoding='utf-8')); dur = json.load(open(f'{D}/voice/dur.json')); words = json.load(open(f'{D}/voice/words.json', encoding='utf-8'))
+lines = json.load(open(f'{D}/lines.json', encoding='utf-8'))
 if sum(1 for L in lines if L.get('silence')) + 1 < 2 and len(lines) > 2: lines[len(lines) // 2]['silence'] = 0.8
 def need(sc, beat=False):   # reading time the scene's texts require (readcheck rule: chars/15 + 1.5 s pad), so a scene is never cut short
     if not sc: return 0
@@ -15,6 +15,33 @@ def need(sc, beat=False):   # reading time the scene's texts require (readcheck 
         base = max(base, 1.4 + 0.55 * (len(items) - 1) + max(len(x.replace(' ', '')) / 15 + PAD for x in items) + 0.3)
     return base   # a scene with an illustration stays at least 4.2 s (2.6 s for a beat) so it can play out
 PAD = 1.0 if F.get('engine') == '3d' else 1.5   # reading pad (s): short-form text is a reinforcement of the burned-in caption
+if F.get('narration') is False:
+    # A real visual timeline, without inventing WAVs or word timings for silent films.
+    scenes = [dict(L.get('scene') or {}, head=(L.get('scene') or {}).get('head', L['text'])) for L in lines]
+    lengths = [max(need(sc) + .4, 2.0) for sc in scenes]
+    target = float(F.get('duration') or F.get('minutes', 0) * 60 or sum(lengths))
+    extra = max(0, target - sum(lengths)) / len(lengths)
+    t, output = 0., []
+    for i, (line, sc, length) in enumerate(zip(lines, scenes, lengths)):
+        end = round(t + length + extra, 3)
+        output.append(dict(id=line['id'], line=i, t0=round(t, 3), t1=end, scene=sc)); t = end
+    cues, visual_words = [], []
+    if F.get('captions_required', bool(F.get('caption') and F['caption'] != 'none')):
+        for line, sc in zip(lines, output):
+            text = line.get('caption') or line['text']; tokens = text.split()
+            a, b = round(sc['t0'] + .12, 3), round(sc['t1'] - .12, 3)
+            step = min(.4, (b-a) / max(1, len(tokens)))
+            cues.append(dict(id=line['id'], t0=a, t1=b, text=text, timing_source='authored_visual_not_speech'))
+            visual_words.append(dict(id=line['id'], t0=a, t1=b, text=text,
+                                     words=[dict(w=w, t0=round(a+i*step,3), t1=round(a+(i+1)*step,3)) for i,w in enumerate(tokens)]))
+    data = dict(dur=t, fps=F['fps'], voice=[], cues=cues, visual_words=visual_words, scenes=output,
+                silences=[[0,t]] if F.get('audio') is False else [[max(0,t/2-.4),t/2+.4],[max(0,t-.6),t]])
+    json.dump(data, open(f'{D}/timeline.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print(f'visual timeline: {t}s, {len(output)} scenes, no narration')
+    sys.exit(0)
+dur = json.load(open(f'{D}/voice/dur.json'))
+words = json.load(open(f'{D}/voice/words.json', encoding='utf-8'))
+
 t, sil, voice, notes, hold = 0.6, [], [], [], 0.0
 for L in lines:
     i = L['id']; t = max(t + L.get('pause', 0.35), hold)
@@ -34,7 +61,7 @@ for L in lines:
         if starts[j + 1] - starts[j] < need({kk: vv for kk, vv in beats[j].items() if kk != 'at'}, True) - 0.3: notes.append(f"{i} beat {j + 1}: only {starts[j + 1] - starts[j]:.1f} s for its text (move 'at' later or shorten the text)")
     voice.append({'id': i, 'text': L['text'], 't0': t0, 'dur': d, 't1': round(t0 + d, 3), 'words': wa, 'scene': {kk: vv for kk, vv in beats[0].items() if kk != 'at'}, 'beats': beats, 'starts': starts}); t = t0 + d
     hold = starts[-1] + need({kk: vv for kk, vv in beats[-1].items() if kk != 'at'}, len(beats) > 1) + 0.35
-DUR = round(t + 1.2, 2); sil.append([round(DUR - 0.5, 2), DUR])
+DUR = round(max(t + 1.2, hold + .1), 2); sil.append([round(DUR - 0.5, 2), DUR])
 cues = []
 for k, v in enumerate(voice):
     a = round(v['t0'] - .10, 3); b = round(max(v['t1'] + .6, a + 1.8), 3)
@@ -47,5 +74,5 @@ for k, v in enumerate(voice):
         scenes.append({'id': v['id'] if len(v['beats']) == 1 else f"{v['id']}b{j + 1}", 'line': k, 't0': v['starts'][j], 't1': v['starts'][j + 1] if j + 1 < len(v['beats']) else s_end, 'scene': {kk: vv for kk, vv in bt.items() if kk != 'at'}})
 for s in scenes:   # a scene must not cover a digital-zero window start: keep as is (picture may continue in silence)
     pass
-json.dump({'dur': DUR, 'fps': F['fps'], 'silences': sil, 'voice': voice, 'cues': cues, 'scenes': scenes}, open(f'{D}/timeline.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+json.dump({'dur': DUR, 'notes': notes, 'fps': F['fps'], 'silences': sil, 'voice': voice, 'cues': cues, 'scenes': scenes}, open(f'{D}/timeline.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print(f'timeline: {DUR}s, {len(voice)} lines, silences {sil}'); [print('NOTE', n) for n in notes]

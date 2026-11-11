@@ -1,0 +1,5 @@
+Original story/layout/animation for this verification sample.
+Native Dark Tech Keynote engine by LemoLab, MIT (UPSTREAM-ENGINE-LICENSE), copied from lemomo-ai/lemo-opuscar commit 9eb7739a0fca4c6990fe966cb8b87b1930f7193a; adapted module path and canvas size only.
+OFL fonts: Inter/Inter Tight by Rasmus Andersson, JetBrains Mono by JetBrains.
+Rendering: Lemo-Opuscar core, Playwright/Chromium, FFmpeg. No speech, music or sound effects.
+Original conceptual UI; no real product screenshots/logos. No paid service or publishing.

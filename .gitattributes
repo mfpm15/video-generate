@@ -1,0 +1,2 @@
+# Shell entry points must run in Linux, WSL and Git Bash.
+*.sh text eol=lf

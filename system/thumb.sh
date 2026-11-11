@@ -4,7 +4,7 @@
 # (argument, else film.json thumb.variant, else 1) to final/thumbnail.jpg.
 # Pick by LOOKING at the sheet: readable at 200 px wide? one focal point? hook text of 5 words or fewer? badge not covering the text?
 set -e
-ROOT=$(cd "$(dirname "$0")/.." && pwd); SLUG=${1:?slug}; D="$ROOT/films/$SLUG"; LIB=${LIB:-$HOME/lemo-opuscar}; PY="$LIB/.venv/bin/python"
+ROOT=$(cd "$(dirname "$0")/.." && pwd); SLUG=${1:?slug}; D="$ROOT/films/$SLUG"; . "$ROOT/system/tools/runtime.sh"
 SIZE=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8')).get('size','1920x1080'))" "$D/film.json")
 VAR=${2:-$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8')).get('thumb',{}).get('variant',1))" "$D/film.json")}
 sh "$ROOT/system/tools/sync-lib.sh" "$D"; rm -rf "$D/out/thumbs"; mkdir -p "$D/out/thumbs" "$D/final"; cd "$LIB"

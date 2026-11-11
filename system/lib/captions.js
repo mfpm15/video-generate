@@ -1,3 +1,4 @@
+import { safeArea } from './safeArea.js';
 // Shared burned-in caption effects. Pure function of t. One effect per film (film.json "caption").
 //   01 Karaoke Highlight   02 Word Pop   03 Kinetic Typography   04 Cinematic Fade & Slide   05 Impact   06 Elegant Minimal
 // Animation is per WORD, never per letter (safe for Arabic joining). Set theme.rtl = true for right-to-left text.
@@ -15,7 +16,7 @@ export const DEFAULT_THEME = { family: 'Inter, sans-serif', accent: '#B7F34A', t
 export const EFFECTS = { '01': 'Karaoke Highlight', '02': 'Word Pop', '03': 'Kinetic Typography', '04': 'Cinematic Fade & Slide', '05': 'Impact Captions', '06': 'Elegant Minimal' };
 
 // safe zones (px) the caption must stay inside; portrait leaves room for platform UI at the bottom
-export function safeZone(W, H) { return H > W ? { top: 210, bottom: 270, side: 60 } : { top: 60, bottom: 110, side: 110 }; }
+export function safeZone(W, H, override) { const r = safeArea(W, H, override); return { top: r.y0, bottom: H-r.y1, side: r.x0, right: W-r.x1 }; }
 
 const PROFILE = {   // size (x unit), weight, max line width (fraction of W), uppercase, letter-spacing px
   '01': { k: 0.044, wt: 600, mw: 0.78, up: false, ls: 0 }, '02': { k: 0.058, wt: 800, mw: 0.82, up: false, ls: 0 },
@@ -37,14 +38,14 @@ function layout(g, v, P, th, W, H, maxW) {
 export function drawCaption(g, t, o) {
   const { effect = '01', W, H, timeline: TL } = o, th = { ...DEFAULT_THEME, ...(o.theme || {}) };
   const cue = TL.cues.find(c => t >= c.t0 && t < c.t1); if (!cue) return null;
-  const v = TL.voice.find(x => x.id === cue.id); if (!v) return null;
-  const P = PROFILE[effect] || PROFILE['01'], S = safeZone(W, H), maxW = Math.min(W * P.mw, W - 2 * S.side - (effect === '01' ? 160 : 40));   // 01 adds 150 px of pill padding around the text
+  const v = [...(TL.voice || []), ...(TL.visual_words || [])].find(x => x.id === cue.id); if (!v) return null;
+  const P = PROFILE[effect] || PROFILE['01'], S = safeZone(W, H, o.safeZone), maxW = Math.min(W * P.mw, W - S.side - S.right - (effect === '01' ? 160 : 40));   // 01 adds 150 px of pill padding around the text
   const aIn = clamp((t - cue.t0) / 0.16), aOut = clamp((cue.t1 - t) / 0.18), a = aIn * aOut;
   g.save(); g.textBaseline = 'middle'; g.textAlign = 'center';
   const L = layout(g, v, P, th, W, H, maxW);
-  const anchorY = H - S.bottom - 24;                         // bottom of the caption block
+  const anchorY = H - S.bottom - 40;                         // bottom of the caption block
   const baseY = effect === '03' && H > W ? anchorY - 90 : anchorY;
-  const top = baseY - L.ht, cx = W / 2;
+  const top = baseY - L.ht, cx = (S.side + W - S.right) / 2;
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; const grow = (a0, b0, a1, b1) => { x0 = Math.min(x0, a0); y0 = Math.min(y0, b0); x1 = Math.max(x1, a1); y1 = Math.max(y1, b1); };
   const font = (wt = P.wt, px = L.px) => `${wt} ${px}px ${th.family}`;
   const place = (ri, k, r) => { const dir = th.rtl ? -1 : 1; let x = th.rtl ? cx + L.rowW[ri] / 2 : cx - L.rowW[ri] / 2; for (let j = 0; j < k; j++) x += dir * (r[j].wd + L.sp); return th.rtl ? x - r[k].wd / 2 : x + r[k].wd / 2; };
