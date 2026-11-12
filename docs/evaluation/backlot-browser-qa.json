@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "library_project_visible": true,
+  "project_id": "ai-agent-openmontage-ab",
+  "stages": 8,
+  "scenes": 4,
+  "playback": {
+    "src": "/media/ai-agent-openmontage-ab/renders/final.mp4",
+    "width": 1080,
+    "height": 1920,
+    "ended": true,
+    "error": null
+  },
+  "console_errors": [],
+  "scope": "Actual Backlot browser/API and encoded preview in cloud Linux. This is not a Claude Code Pro conversation or Windows laptop test."
+}

@@ -24,3 +24,5 @@ Anggaran cap$0 adalah guard orchestration, bukan firewall. Launcher menonaktifka
 Evaluasi memakai brief AI Agent: Dari Ide ke Aksi, 12 detik,1080x1920,24fps,caption Indonesia dan silent AAC. Source contoh berada di examples/ai-agent-workshop; laporan keputusan ada di EVALUASI-ID.md; penilaian visual dan performa dilaporkan dengan batasan cloud. Jangan menyimpulkan kualitas lebih baik dari jumlah tool atau hasil tes unit saja.
 
 Lihat [keputusan dan batas evaluasi](EVALUASI-ID.md), [bukti QA](docs/evaluation/), dan [source contoh](examples/ai-agent-workshop/). MP4 A/B dikirim sebagai paket perbandingan di chat. Versi sebelumnya tersedia di branch `archive/opuscar-before-openmontage`. Adaptor berbayar upstream tetap ada sebagai source opsional; profil kita tidak mengaktifkan/memanggilnya.
+
+Panduan langkah demi langkah, contoh prompt dan dashboard lokal: [PANDUAN-CLAUDE-CODE.md](PANDUAN-CLAUDE-CODE.md). Buka Backlot dengan `.\Start-Board.ps1` atau `/backlot` di Claude Code. Input produksi tetap melalui Claude Code; Backlot adalah dashboard baca-saja.
