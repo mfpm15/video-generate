@@ -1,0 +1,83 @@
+{
+  "scope": "OCR of actual encoded caption strip at phase midpoints and boundaries; no ASR because narration was intentionally absent.",
+  "status": "pass",
+  "samples": [
+    {
+      "frame": 36,
+      "time_seconds": 1.5,
+      "expected": "Mulai dari satu ide.",
+      "ocr": "Mulai dari satu ide.",
+      "matches": true
+    },
+    {
+      "frame": 71,
+      "time_seconds": 2.9583333333333335,
+      "expected": "Mulai dari satu ide.",
+      "ocr": "Mulai dari satu ide.",
+      "matches": true
+    },
+    {
+      "frame": 72,
+      "time_seconds": 3.0,
+      "expected": "Susun langkahnya.",
+      "ocr": "Susun langkahnya.",
+      "matches": true
+    },
+    {
+      "frame": 108,
+      "time_seconds": 4.5,
+      "expected": "Susun langkahnya.",
+      "ocr": "Susun langkahnya.",
+      "matches": true
+    },
+    {
+      "frame": 143,
+      "time_seconds": 5.958333333333333,
+      "expected": "Susun langkahnya.",
+      "ocr": "Susun langkahnya.",
+      "matches": true
+    },
+    {
+      "frame": 144,
+      "time_seconds": 6.0,
+      "expected": "Jalankan bersama.",
+      "ocr": "Jalankan bersama.",
+      "matches": true
+    },
+    {
+      "frame": 180,
+      "time_seconds": 7.5,
+      "expected": "Jalankan bersama.",
+      "ocr": "Jalankan bersama.",
+      "matches": true
+    },
+    {
+      "frame": 215,
+      "time_seconds": 8.958333333333334,
+      "expected": "Jalankan bersama.",
+      "ocr": "Jalankan bersama.",
+      "matches": true
+    },
+    {
+      "frame": 216,
+      "time_seconds": 9.0,
+      "expected": "Kamu tentukan arah.",
+      "ocr": ": Kamu tentukan arah.",
+      "matches": true
+    },
+    {
+      "frame": 252,
+      "time_seconds": 10.5,
+      "expected": "Kamu tentukan arah.",
+      "ocr": ": Kamu tentukan arah. :",
+      "matches": true
+    },
+    {
+      "frame": 282,
+      "time_seconds": 11.75,
+      "expected": "Kamu tentukan arah.",
+      "ocr": "Kamu tentukan arah. ;",
+      "matches": true
+    }
+  ]
+}

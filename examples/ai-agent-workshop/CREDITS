@@ -1,0 +1,5 @@
+Original AI Agent workshop geometry, motion, layout and artwork authored in code for this comparison. No media generation API, stock or licensed commercial footage used.
+Three.js 0.170.0, MIT, bundled license: hyperframes/assets/THREE-LICENSE.txt.
+GSAP 3.14.2, GSAP Standard License, https://gsap.com/community/standard-license/ (library source header retained).
+Inter variable font, Rasmus Andersson, SIL OFL; Google Fonts pinned commit 86aced91de05cd4f96a06838124cca45be337b2b, ofl/inter/Inter[opsz,wght].ttf.
+OpenMontage upstream AGPLv3, HyperFrames 0.9.36 Apache-2.0. Output is authored 3D motion graphics, not generated anime/film footage. Silent AAC only; no narration/SFX/music.

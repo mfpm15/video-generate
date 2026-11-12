@@ -1,58 +1,16 @@
 ---
-description: Judul seri → deskripsi → riset/verifikasi → daftar rekomendasi style → pilihan → seluruh episode diproduksi dan diperiksa otomatis.
-argument-hint: "Judul seri [| deskripsi] [| jumlah bagian] [| gaya atau otomatis]"
+description: Produksi seri video lokal dengan gaya konsisten dan resume dari bukti QA.
+argument-hint: "Judul [| deskripsi] [| gaya atau otomatis]"
 ---
 
 Input pengguna: $ARGUMENTS
 
-Baca `system/CLAUDE-WORKFLOW.md` dan jalankan urutannya dalam bahasa pengguna. Bila hanya judul, tanyakan deskripsi terlebih dahulu (boleh sekaligus jumlah episode: 14 default bila tanpa preferensi). Verifikasi brief/fakta, baru tampilkan 3 rekomendasi look dalam tabel jelas beserta alasan, engine dan biaya, ditambah otomatis/gaya sendiri. Jangan memilih style final sebelum deskripsi dianalisis. Jika pilihan sudah diberikan, jangan tanyakan ulang.
+Baca AGENT_GUIDE.md dan LOCAL_FREE_ONLY.md. Jalankan workflow OpenMontage asli secara mandiri. Anggaran API tambahan $0, render lokal, tidak ada publikasi otomatis. Gunakan login Claude Code Pro pengguna, bukan API LLM berbayar.
 
-Sesudah pilihan, default kerjakan seluruh seri sampai selesai tanpa checkpoint tambahan; mode pilot/outline hanya jika diminta. Kunci look/cast/kontrak bersama, verifikasi frame pilot, lalu lanjut semua episode. Pengguna tidak perlu mengedit style.md, JSON, naskah atau menjalankan terminal sendiri. Default engine Opuscar; anime hanya bila dipilih eksplisit, melalui skill anime dan izin biaya yang nyata, bukan `system/series.py`.
+Jika baru judul, tanyakan deskripsi dahulu. Setelah deskripsi dipahami/verifikasi, jelaskan tiga rekomendasi look: tampilan dan gerak yang terlihat, alasan cocok, batas hardware, serta engine lokal. Terima gaya bebas/referensi dan pilihan otomatis. Pertahankan jawaban yang sudah ada; bila user telah mendelegasikan pilihan/proses penuh, catat approval_policy sesuai upstream dan lanjut dalam scope tersebut tanpa menanyakan izin rutin lagi. Setelah pengguna menyetujui brief dan memilih look/otomatis untuk produksi, catat scope approval tersebut beserta kebijakan checkpoint lalu jalankan script, scene plan, assets, edit, render dan QA otomatis dalam scope itu. Jika pengguna mengizinkan produksi penuh, jangan minta persetujuan rutin per tahap lagi; tanyakan hanya perubahan material di luar brief atau blocker nyata. Jangan memperluas persetujuan ini menjadi izin API berbayar/publikasi. Jangan meminta user mengedit STYLE.md, JSON atau command terminal.
 
-Ikuti `system/STYLE-WORKFLOW.md`, `system/VIDEO-RULES.md`, dan `system/QUALITY-GATES.md`. Scaffold hanya stub; Claude harus menerapkan renderer custom bila dipilih. `series.py init` mendukung `--render`, `--engine`, dan `--requested-style`. Untuk gaya bebas gunakan slug scaffold AUTO lalu terapkan art direction dari chat. Tulis setiap posts/pNN.json sebelum build; runner menyalinnya ke film/post.json. Build tidak boleh sukses/resume hanya karena MP4 ada. Periksa semua deliverable dan QA. Pengguna memposting manual.
+Jalankan preflight nyata, pilih pipeline, baca tiap director skill, buat canonical artifacts/decision log/checkpoints. Pertimbangkan HyperFrames untuk HTML/GSAP/Three.js dan Remotion bila tersedia serta lisensinya cocok; jangan mengubah engine diam-diam. Untuk hero work gunakan komposisi atelier yang dibuat sesuai cerita, bukan menumpuk stock card. Runtime tidak otomatis membuat kualitas artistik lebih baik.
 
-## 2. Riset mendalam (lambat dan teliti itu benar)
-- Gunakan WebSearch (mode extended untuk fakta sulit/terbaru) dan WebFetch pada sumber primer: standar/RFC, dokumentasi resmi, universitas, lembaga pemerintah/internasional, jurnal. Hindari blog anonim dan konten generik sebagai satu-satunya sumber.
-- Setiap klaim yang akan diucapkan masuk `series/<slug>/RESEARCH.md`: klaim | URL | tanggal/versi | keyakinan (tinggi/sedang/rendah) | bagian. Klaim penting butuh minimal 2 sumber independen. Klaim yang bertentangan: pakai versi paling hati-hati atau buang. Fakta yang bisa kedaluwarsa diberi tanggal. Jangan mengarang angka; perkiraan diberi kata "sekitar". Klaim keyakinan rendah TIDAK boleh masuk naskah.
-- Tulis juga miskonsepsi umum (untuk bagian "kesalahpahaman") dan contoh nyata yang bisa diverifikasi.
+Periksa beberapa frame nyata, posisi teks/objek penting, gerak sesuai aksi, timing baca, playback dan file MP4 final. Jalankan `python scripts/verify-local-mp4.py <final.mp4> --report <qa.json>` pada file final. Ini memeriksa codec/warna/faststart dan decode penuh; lakukan review artistik/gerak secara terpisah. Perbaiki otomatis dalam scope. Library dan font harus tersedia lokal untuk render; jangan bergantung CDN saat render. Format target standar 1080x1920@24/30, H264 yuv420p/SAR1/BT709/faststart dengan AAC sesuai brief. Gunakan HyperFrames quality high untuk final utama. Bila stream H264 sudah memenuhi spesifikasi, remux dengan copy video untuk menghindari recompress; bila perlu encode ulang, gunakan CRF18 atau lebih baik sesuai brief. Pertahankan kualitas/resolusi yang dipilih; salinan ringan diberi label terpisah.
 
-## 3. Outline (OUTLINE.md) dan pengaturan seri
-- `~/lemo-opuscar/.venv/bin/python system/series.py init <slug> --title "<judul seri>" --style <slug-style> --parts <N> --size 1080x1920 --lang id --desc "<deskripsi>"`
-- Struktur 14 bagian: 1 hook + gambaran besar; 2-11 satu mekanisme per bagian, berurutan logis (tiap bagian membangun yang sebelumnya tanpa mengharuskannya); 12 kesalahpahaman umum; 13 contoh nyata; 14 rangkuman + langkah berikutnya. Untuk N lain, sesuaikan.
-- Tiap bagian: berdiri sendiri (penonton bisa masuk dari bagian mana pun: ulangi konteks satu kalimat), satu ide, hook di 2 detik pertama, payoff, lalu penutup yang mengajak ke bagian berikutnya (rasa ingin tahu, bukan janji palsu), tanpa spoiler yang menipu. Panjang 40-55 detik (sekitar 8-11 baris).
-- Isi `series.json` (title, hook, thumb_text tiap bagian) lalu `series.py scaffold <slug>`. Bila mode "berhenti setelah outline": tampilkan OUTLINE.md dan berhenti.
-
-## 4. Naskah tiap bagian (`films/<slug>-pNN/lines.json`)
-Aturan sama dengan /buat-video (hook, 8-16 kata per baris, `*kata kunci*`, visual 3D di >= 70% adegan, jenis visual tidak sama dua kali berturut-turut; daftar visual ada di `.claude/commands/buat-video.md`). Tambahan seri:
-- Seluruh seri memakai kosakata istilah yang SAMA (satu istilah untuk satu konsep), dan pelafalan istilah asing/singkatan dicatat di `series/<slug>/pronunciation.json` (kata -> cara baca).
-- Variasikan kombinasi visual antarbagian agar tidak monoton, tapi pertahankan palet/caption/lencana yang sama.
-- Baris pertama setiap bagian = hook; baris terakhir = ajakan ke bagian berikutnya (`film.json` sudah memuat lencana dan kartu "Berikutnya").
-- Tidak ada merek dagang, orang nyata, atau klaim medis/keuangan yang bisa menyesatkan.
-
-## 5. Verifikasi fakta (wajib sebelum render)
-Buat `series/<slug>/FACTCHECK.md`: untuk SETIAP baris naskah yang memuat klaim faktual, tulis bagian.baris | klaim | baris RESEARCH.md pendukung | OK/PERBAIKI. Baca ulang semua naskah terhadap RESEARCH.md; perbaiki yang tidak didukung atau terlalu pasti. Hanya lanjut bila tidak ada baris yang belum OK.
-
-## 6. Build (dapat dilanjutkan)
-`~/lemo-opuscar/.venv/bin/python system/series.py build <slug>` dijalankan di background (run_in_background). Skrip: menerapkan pelafalan, build tiap bagian (suara, ASR, timeline, render, mix, mux, QA), membuat thumbnail, mencoba ulang sekali bila gagal, menulis `SERIES-REPORT.md`, dan melewati bagian yang sudah jadi. Bila terputus, jalankan lagi (`--only 3,4 --force` untuk memaksa bagian tertentu). Perkiraan: 4-5 menit per bagian.
-Selagi build berjalan, kerjakan langkah 7.
-
-## 7. Paket posting tiap bagian: `series/<slug>/posts/pNN.json`
-Isi: `title` (<= 70 karakter, jujur, mengandung kata kunci pencarian), `caption` (<= 220 karakter: baris 1 hook yang sama dengan rasa ingin tahu di video, baris 2 janji manfaat, baris 3 satu pertanyaan yang memancing komentar, lalu penanda seri "Bagian x/N"), `hashtags` (5-8, urut dari spesifik ke luas: 2-3 sangat relevan topik, 2 kategori seperti #edukasi #belajar, lalu 1-2 luas seperti #fyp; tidak spam, tidak menyesatkan), `description` (2-3 kalimat + kata kunci alami), `keywords` (untuk tag YouTube), `pinned_comment` (ajak ke bagian berikutnya + pertanyaan), `sources` (URL dari RESEARCH.md untuk bagian itu), `notes`. Tidak ada hashtag atau trik yang menjamin FYP; jangan menjanjikannya kepada pengguna. Yang menentukan: hook 2 detik pertama, retensi, relevansi, konsistensi seri.
-
-## 8. Tinjauan visual tiap bagian (setelah bagian itu selesai dibuild)
-Untuk setiap bagian: `sh system/review.sh <slug>-pNN` lalu LIHAT `out/review/sheet-*.jpg` dengan Read; dan `out/thumbs/sheet.jpg` (tiga varian thumbnail, besar dan 200 px). Periksa: teks meluber/terpotong, tumpang tindih, area kosong, label tak terbaca, lencana menutupi teks, thumbnail terbaca di 200 px. Thumbnail yang baik: <= 5 kata, satu fokus, kata kunci beraksen, jujur terhadap isi, bukan clickbait palsu. Thumbnail hanya 9:16 (3D). Varian DIKUNCI sama untuk seluruh seri (default varian 2 = satu kata raksasa + objek 3D; ubah `series.json` thumb_variant dan `film.json` thumb.variant bila varian lain lebih cocok), teks tiap bagian berbeda; `thumb.kicker` sudah berisi lencana BAGIAN x/N. Bila ada cacat: perbaiki (lines.json atau `system/lib` bila bug umum), `series.py build <slug> --only N --force`, `sh system/thumb.sh <slug>-pNN`, tinjau ulang. Maksimal 2 putaran per bagian. Jangan pernah mengklaim sudah menonton video penuh atau mendengar audio.
-Bila pelafalan keliru terdeteksi Whisper (dilaporkan di QA-REPORT), tambahkan ke pronunciation.json dan bangun ulang bagian yang terdampak.
-
-## 9. Selesai
-- `series.py schedule <slug> --start <besok>` (2 post per hari; jam 12:00 dan 19:00 hanya usulan) menulis `POST.md` tiap bagian dan `series/<slug>/SCHEDULE.md`.
-- `series.py clean <slug>` untuk menghemat disk (video dan thumbnail final tetap ada).
-- Laporan pagi untuk pengguna, ringkas: lokasi `series/<slug>/` (SCHEDULE.md, SERIES-REPORT.md, RESEARCH.md, FACTCHECK.md) dan `films/<slug>-pNN/final/`; status per bagian (VERIFIED/LIMITED/NOT TESTED); daftar hal yang HARUS dicek manusia sebelum posting: tonton tiap bagian dengan suara, baca RESEARCH.md untuk angka yang meragukan, dengarkan baris yang ditandai Whisper, aktifkan label konten AI/sintetis bila platform menyediakannya; catatan syarat Edge-TTS (pengguna menyatakan aman untuk edukasi) dan aturan platform untuk konten berulang; apa yang tidak sempat dikerjakan.
-
-## Aturan keras
-- Tidak ada .srt; SFX tidak dobel; jangan edit `_lib/`/`fonts/` dalam film (ubah di `system/`); jangan edit library upstream atau folder proyek lain; jangan memposting apa pun.
-- Fakta hanya dari RESEARCH.md. Tidak ada klaim keyakinan rendah. Tidak ada janji FYP.
-- Jangan menghapus data pengguna. `clean.sh` hanya menghapus file kerja yang bisa dibuat ulang.
-- Perubahan di `system/lib` atau `system/audio`: jalankan `node system/tools/caption-lab.mjs` dan satu build uji sebelum dipakai ke seri.
-
-## Tambahan v3 (2026-11-12)
-Semua aturan "Tambahan v3" di `.claude/commands/buat-video.md` berlaku untuk setiap episode: watermark ngetehnology kiri atas, chip kanan atas "<judul singkat seri> · EP n/N" (isi `--short` saat `series.py init`), kartu "Berikutnya", beat, hook engine, art director (palet seri dikunci dari topik seri), dan **CAPTION.txt + HASHTAGS.txt per episode** (wajib; `series.py schedule` juga menulisnya). Sebelum menutup: jalankan `system/py/check_deliverables.py` untuk tiap episode.
+Untuk seri, buktikan pilot dan kunci visual sebelum bagian berikutnya; resume hanya jika artefak dan hasil QA masih cocok. Untuk anime, bedakan animasi2D/rig/cel lokal dari video generatif. Intel iGPU/RAM16GB tidak menjadi janji inference video berat. Bila aksi/penampilan yang diminta memerlukan model/aset yang tidak tersedia dalam jalur gratis, jelaskan blocker konkret sebelum mengganti treatment. Jangan menyebut gambar di-zoom atau warp kecil sebagai akting yang diminta.

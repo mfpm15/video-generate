@@ -1,0 +1,17 @@
+{
+  "file": "B-openmontage.mp4",
+  "browser": "Chromium",
+  "error": null,
+  "width": 1080,
+  "height": 1920,
+  "duration": 12,
+  "canPlay": "probably",
+  "ended": true,
+  "currentTime": 12,
+  "quality": {
+    "totalVideoFrames": 288,
+    "droppedVideoFrames": 3
+  },
+  "status": "PLAYBACK_COMPLETED",
+  "scope": "Current cloud browser playback; does not prove that a chat download link or the user device works, or that artistic quality is accepted."
+}

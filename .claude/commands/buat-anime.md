@@ -1,32 +1,16 @@
 ---
-description: Buat atau revisi anime dari cerita, dengan template/style pilihan, rencana biaya, dan toolkit make-an-anime. Produksi Fal hanya setelah diizinkan.
-argument-hint: "Judul atau path cerita [| deskripsi] [| template/style]"
+description: Animasi karakter lokal dengan batas kemampuan yang jujur; tidak memanggil generator berbayar.
+argument-hint: "Judul [| deskripsi] [| gaya atau otomatis]"
 ---
-
-Baca juga `system/QUALITY-GATES.md`: kualitas upstream dan danger zone (UI/crop serta pitfalls style) adalah quality gate untuk setiap hasil. Claude menanganinya otomatis dari brief; jangan meminta user mengedit file. Jangan melaporkan kualitas setara atau siap posting sebelum ada bukti review video, safe zone, audio dan QA.
 
 Input pengguna: $ARGUMENTS
 
-Baca `.claude/skills/make-an-anime/SKILL.md` dan referensi integrasi repositorinya. Gunakan skill itu untuk eksekusi. Jawab dalam bahasa pengguna. Root proyek adalah checkout saat ini, bukan path Windows tetap.
+Baca AGENT_GUIDE.md dan LOCAL_FREE_ONLY.md. Jalankan workflow OpenMontage asli secara mandiri. Anggaran API tambahan $0, render lokal, tidak ada publikasi otomatis. Gunakan login Claude Code Pro pengguna, bukan API LLM berbayar.
 
-## Intake bertahap dan otomatis
+Jika baru judul, tanyakan deskripsi dahulu. Setelah deskripsi dipahami/verifikasi, jelaskan tiga rekomendasi look: tampilan dan gerak yang terlihat, alasan cocok, batas hardware, serta engine lokal. Terima gaya bebas/referensi dan pilihan otomatis. Pertahankan jawaban yang sudah ada; bila user telah mendelegasikan pilihan/proses penuh, catat approval_policy sesuai upstream dan lanjut dalam scope tersebut tanpa menanyakan izin rutin lagi. Setelah pengguna menyetujui brief dan memilih look/otomatis untuk produksi, catat scope approval tersebut beserta kebijakan checkpoint lalu jalankan script, scene plan, assets, edit, render dan QA otomatis dalam scope itu. Jika pengguna mengizinkan produksi penuh, jangan minta persetujuan rutin per tahap lagi; tanyakan hanya perubahan material di luar brief atau blocker nyata. Jangan memperluas persetujuan ini menjadi izin API berbayar/publikasi. Jangan meminta user mengedit STYLE.md, JSON atau command terminal.
 
-Jalankan `system/CLAUDE-WORKFLOW.md`: judul → tanyakan deskripsi/cerita dahulu → analisis/verifikasi → tabel 3 rekomendasi look yang jelas, plus otomatis/gaya sendiri → pilihan → produksi dan QA otomatis. Jika deskripsi/gaya sudah diberikan, jangan tanyakan ulang. Pengguna cukup bicara di chat; Claude menulis style bible, plan, prompt, config dan renderer. Jangan mewajibkan edit STYLE.md atau pilihan preset statis.
+Jalankan preflight nyata, pilih pipeline, baca tiap director skill, buat canonical artifacts/decision log/checkpoints. Pertimbangkan HyperFrames untuk HTML/GSAP/Three.js dan Remotion bila tersedia serta lisensinya cocok; jangan mengubah engine diam-diam. Untuk hero work gunakan komposisi atelier yang dibuat sesuai cerita, bukan menumpuk stock card. Runtime tidak otomatis membuat kualitas artistik lebih baik.
 
-Verifikasi fiksi untuk konsistensi cerita; verifikasi fakta nyata dengan sumber. Template contoh hanya dipakai jika dipilih. Inisialisasi proyek baru `anime/<slug>/` lewat CLI Ruby skill dengan path absolut; jangan menimpa repo/film/proyek lain. Kunci cast/style dan budget untuk seri, review pilot lalu lanjut sendiri dalam izin yang ada.
+Periksa beberapa frame nyata, posisi teks/objek penting, gerak sesuai aksi, timing baca, playback dan file MP4 final. Jalankan `python scripts/verify-local-mp4.py <final.mp4> --report <qa.json>` pada file final. Ini memeriksa codec/warna/faststart dan decode penuh; lakukan review artistik/gerak secara terpisah. Perbaiki otomatis dalam scope. Library dan font harus tersedia lokal untuk render; jangan bergantung CDN saat render. Format target standar 1080x1920@24/30, H264 yuv420p/SAR1/BT709/faststart dengan AAC sesuai brief. Gunakan HyperFrames quality high untuk final utama. Bila stream H264 sudah memenuhi spesifikasi, remux dengan copy video untuk menghindari recompress; bila perlu encode ulang, gunakan CRF18 atau lebih baik sesuai brief. Pertahankan kualitas/resolusi yang dipilih; salinan ringan diberi label terpisah.
 
-## Persiapan, biaya, produksi
-
-- Jalankan `setup` dan `doctor` melalui Ruby. Untuk skill lokal ini kredensial datang dari `FAL_AI_API_KEY` di environment Claude Code; plugin/MCP upstream tidak otomatis terpasang. Arahkan pengisian lewat environment/secret manager, jangan minta key di chat.
-- Tampilkan rencana konkret dan biaya sebelum generasi atau upload. Perintah ini tidak dengan sendirinya menyetujui Fal berbayar. Catat `plan:approve` hanya setelah ada izin produksi yang nyata; gunakan izin terdahulu bila memang mencakup rencana tersebut.
-- Produksi mengikuti skill: sheets → suara/score → keyframe → animasi → overlay → SFX → review. MiniMax H3 default; Seedance hanya bila diminta. Swift VFX opsional khusus macOS.
-- Setiap prompt gambar menggunakan style bible; prompt gerak memakai style ringkas dan arahan shot. Cocokkan keyframe perwakilan dengan style sebelum animasi. Jangan mengganti style/model/format diam-diam saat gagal.
-- Tinjau hasil terhadap `STYLE-CONTRACT.md`, konsistensi karakter, kontinuitas, gerak, caption dan audio. Bedakan pemeriksaan frame, playback, dan pendengaran; laporkan yang belum dilakukan. Revisi di dalam allowance, minta keputusan hanya jika perlu melewati biaya/scope yang diizinkan.
-
-## Hasil
-
-Simpan video bersih dan final dengan caption terbakar, credit/lisensi, plan, style contract dan laporan QA di proyek anime. Sertakan branding `ngetehnology` melalui overlay anime sesuai brief. Tidak ada publikasi otomatis atau `.srt` tambahan. Laporkan lokasi output, style/template yang benar-benar diterapkan, biaya/panggilan aktual dan batasan yang tersisa. Lemo-Opuscar tetap dipakai oleh `/buat-video` dan `/buat-seri`; format proyek kedua engine berbeda.
-
-## Tanpa Fal bila diminta
-
-Ikuti `.claude/skills/make-an-anime/references/local-mode.md`. Gunakan `python system/doctor.py --engine anime-local`; jangan memblokir editing/render lokal hanya karena key Fal kosong. Perlu artwork/footage yang tersedia atau model gambar lokal/tool gambar yang benar-benar tersedia. Labeli sebagai motion-comic/compositing, bukan gerak generatif H3. Jangan menjanjikan Claude Code bisa membuat artwork offline dari judul tanpa aset/model.
+Untuk seri, buktikan pilot dan kunci visual sebelum bagian berikutnya; resume hanya jika artefak dan hasil QA masih cocok. Untuk anime, bedakan animasi2D/rig/cel lokal dari video generatif. Intel iGPU/RAM16GB tidak menjadi janji inference video berat. Bila aksi/penampilan yang diminta memerlukan model/aset yang tidak tersedia dalam jalur gratis, jelaskan blocker konkret sebelum mengganti treatment. Jangan menyebut gambar di-zoom atau warp kecil sebagai akting yang diminta.
